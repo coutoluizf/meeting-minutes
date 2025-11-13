@@ -410,10 +410,11 @@ pub async fn generate_meeting_summary(
 
     // Get final prompt template in the appropriate language and format it
     // Date: 13/11/2025 - Author: Luiz
-    let final_system_prompt = format!(
-        prompts::get_final_system_prompt_template(language),
-        section_instructions, clean_template_markdown
-    );
+    let template_str = prompts::get_final_system_prompt_template(language);
+    // Since format! requires a string literal, we use string replace for dynamic templates
+    let final_system_prompt = template_str
+        .replacen("{}", &section_instructions, 1)
+        .replacen("{}", &clean_template_markdown, 1);
 
     let mut final_user_prompt = format!(
         r#"
