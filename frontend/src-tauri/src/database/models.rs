@@ -113,3 +113,13 @@ pub struct TranscriptSetting {
     #[serde(rename = "openaiApiKey")]
     pub openai_api_key: Option<String>,
 }
+
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
+pub struct ChatMessage {
+    pub id: String,
+    pub meeting_id: String,
+    pub role: String, // 'user' or 'assistant'
+    pub content: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub metadata: Option<String>, // JSON for additional data if needed
+}

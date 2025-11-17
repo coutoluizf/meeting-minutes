@@ -230,5 +230,14 @@
     "customAIDescription": "Se você está planejando construir agentes de IA personalizados com foco em privacidade ou um produto totalmente sob medida para o seu negócio, podemos ajudá-lo a construí-lo.",
     "chatWithTeam": "Conversar com a equipe Zackriya",
     "builtBy": "Desenvolvido por Zackriya Solutions"
+  },
+  "chat": {
+    "noMessages": "Ainda não há mensagens. Faça uma pergunta sobre esta reunião!",
+    "placeholder": "Faça uma pergunta sobre esta reunião...",
+    "hint": "Pressione Enter para enviar, Shift+Enter para nova linha",
+    "thinking": "Pensando...",
+    "errorLoadingMessages": "Falha ao carregar mensagens do chat",
+    "errorNoModel": "Por favor, configure um modelo nas configurações primeiro",
+    "errorAskingQuestion": "Falha ao obter resposta"
   }
 }

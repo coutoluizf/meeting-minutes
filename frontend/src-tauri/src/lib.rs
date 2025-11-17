@@ -38,6 +38,7 @@ pub(crate) use perf_trace;
 pub mod analytics;
 pub mod api;
 pub mod audio;
+pub mod chat;
 pub mod console_utils;
 pub mod database;
 pub mod notifications;
@@ -611,6 +612,11 @@ pub fn run() {
             summary::api_list_templates,
             summary::api_get_template_details,
             summary::api_validate_template,
+            // Chat commands
+            chat::api_get_chat_messages,
+            chat::api_save_chat_message,
+            chat::api_delete_chat_messages,
+            chat::api_ask_question,
             openrouter::get_openrouter_models,
             audio::recording_preferences::get_recording_preferences,
             audio::recording_preferences::set_recording_preferences,

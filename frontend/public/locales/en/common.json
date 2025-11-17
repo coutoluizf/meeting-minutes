@@ -230,5 +230,14 @@
     "customAIDescription": "If you're planning to build privacy-first custom AI agents or a fully tailored product for your business, we can help you build it.",
     "chatWithTeam": "Chat with the Zackriya team",
     "builtBy": "Built by Zackriya Solutions"
+  },
+  "chat": {
+    "noMessages": "No messages yet. Ask a question about this meeting!",
+    "placeholder": "Ask a question about this meeting...",
+    "hint": "Press Enter to send, Shift+Enter for new line",
+    "thinking": "Thinking...",
+    "errorLoadingMessages": "Failed to load chat messages",
+    "errorNoModel": "Please configure a model in settings first",
+    "errorAskingQuestion": "Failed to get answer"
   }
 }
