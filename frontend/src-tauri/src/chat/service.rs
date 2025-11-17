@@ -5,11 +5,10 @@ use crate::database::repositories::{
     meeting::MeetingsRepository,
     setting::SettingsRepository,
     summary::SummaryProcessesRepository,
-    transcript::TranscriptsRepository,
 };
 use crate::summary::llm_client::{self, LLMProvider};
 use chrono::Utc;
-use log::{error as log_error, info as log_info};
+use log::info as log_info;
 use reqwest::Client;
 use sqlx::SqlitePool;
 use tauri::{AppHandle, Runtime};
@@ -36,10 +35,11 @@ impl ChatService {
 
         // 3. Get Ollama endpoint if applicable
         let ollama_endpoint = if provider == LLMProvider::Ollama {
-            SettingsRepository::get_ollama_endpoint(&pool)
+            SettingsRepository::get_model_config(&pool)
                 .await
                 .ok()
                 .flatten()
+                .and_then(|s| s.ollama_endpoint)
         } else {
             None
         };
@@ -50,10 +50,14 @@ impl ChatService {
             .map_err(|e| format!("Failed to get meeting: {}", e))?
             .ok_or_else(|| format!("Meeting not found: {}", meeting_id))?;
 
-        // 5. Get transcripts
-        let transcripts = TranscriptsRepository::get_transcripts(&pool, &meeting_id)
-            .await
-            .map_err(|e| format!("Failed to get transcripts: {}", e))?;
+        // 5. Get transcripts - query directly from database
+        let transcripts: Vec<crate::database::models::Transcript> = sqlx::query_as(
+            "SELECT * FROM transcripts WHERE meeting_id = ? ORDER BY timestamp ASC"
+        )
+        .bind(&meeting_id)
+        .fetch_all(&pool)
+        .await
+        .map_err(|e| format!("Failed to get transcripts: {}", e))?;
 
         let transcript_text = transcripts
             .iter()
@@ -159,7 +163,7 @@ impl ChatService {
 
     /// Get API key for the specified provider from settings
     async fn get_api_key(pool: &SqlitePool, provider: &LLMProvider) -> Result<String, String> {
-        let settings = SettingsRepository::get_settings(pool)
+        let settings = SettingsRepository::get_model_config(pool)
             .await
             .map_err(|e| format!("Failed to get settings: {}", e))?
             .ok_or_else(|| "No settings found. Please configure API keys in settings.".to_string())?;

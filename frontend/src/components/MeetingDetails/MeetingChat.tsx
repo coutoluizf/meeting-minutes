@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 
 interface ChatMessage {
@@ -159,7 +159,7 @@ export function MeetingChat({ meetingId, modelProvider, modelName }: MeetingChat
                     : 'bg-white text-gray-900 border border-gray-200'
                 }`}
               >
-                <div className="text-sm whitespace-pre-wrap break-words">
+                <div className="text-base whitespace-pre-wrap break-words">
                   {message.content}
                 </div>
                 <div

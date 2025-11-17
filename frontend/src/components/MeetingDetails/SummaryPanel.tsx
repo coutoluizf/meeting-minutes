@@ -9,7 +9,7 @@ import { SummaryGeneratorButtonGroup } from './SummaryGeneratorButtonGroup';
 import { SummaryUpdaterButtonGroup } from './SummaryUpdaterButtonGroup';
 import { MeetingChat } from './MeetingChat';
 import Analytics from '@/lib/analytics';
-import { RefObject } from 'react';
+import { RefObject, useState } from 'react';
 
 interface SummaryPanelProps {
   meeting: {
@@ -84,21 +84,56 @@ export function SummaryPanel({
 }: SummaryPanelProps) {
   const isSummaryLoading = summaryStatus === 'processing' || summaryStatus === 'summarizing' || summaryStatus === 'regenerating';
 
+  // Tab state - Chat is default (core business)
+  const [activeTab, setActiveTab] = useState<'chat' | 'summary'>('chat');
+
   return (
     <div className="flex-1 min-w-0 flex flex-col bg-white overflow-hidden">
-      {/* Title area */}
-      <div className="p-4 border-b border-gray-200">
-        {/* <EditableTitle
-          title={meetingTitle}
-          isEditing={isEditingTitle}
-          onStartEditing={onStartEditTitle}
-          onFinishEditing={onFinishEditTitle}
-          onChange={onTitleChange}
-        /> */}
+      {/* Tabs Header */}
+      <div className="border-b border-gray-200">
+        <div className="flex items-center gap-1 px-4 pt-4">
+          {/* Chat Tab - Core Business (First) */}
+          <button
+            onClick={() => {
+              setActiveTab('chat');
+              Analytics.trackButtonClick('chat_tab', 'summary_panel');
+            }}
+            className={`
+              px-4 py-2 font-medium text-sm rounded-t-lg transition-colors
+              ${activeTab === 'chat'
+                ? 'bg-white text-blue-600 border-t border-l border-r border-gray-200'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }
+            `}
+          >
+            <span className="flex items-center gap-2">
+              💬 Chat
+            </span>
+          </button>
 
-        {/* Button groups - only show when summary exists */}
-        {aiSummary && !isSummaryLoading && (
-          <div className="flex items-center justify-center w-full pt-0 gap-2">
+          {/* Summary Tab (Second) */}
+          <button
+            onClick={() => {
+              setActiveTab('summary');
+              Analytics.trackButtonClick('summary_tab', 'summary_panel');
+            }}
+            className={`
+              px-4 py-2 font-medium text-sm rounded-t-lg transition-colors
+              ${activeTab === 'summary'
+                ? 'bg-white text-blue-600 border-t border-l border-r border-gray-200'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }
+            `}
+          >
+            <span className="flex items-center gap-2">
+              📝 Summary
+            </span>
+          </button>
+        </div>
+
+        {/* Action Buttons - Only show in Summary tab when summary exists */}
+        {activeTab === 'summary' && aiSummary && !isSummaryLoading && (
+          <div className="flex items-center justify-center w-full px-4 pb-4 pt-2 gap-2">
             {/* Left-aligned: Summary Generator Button Group */}
             <div className="flex-shrink-0">
               <SummaryGeneratorButtonGroup
@@ -135,61 +170,75 @@ export function SummaryPanel({
         )}
       </div>
 
-      {isSummaryLoading ? (
-        <div className="flex flex-col h-full">
-          {/* Show button group during generation */}
-          <div className="flex items-center justify-center pt-8 pb-4">
-            <SummaryGeneratorButtonGroup
-              modelConfig={modelConfig}
-              setModelConfig={setModelConfig}
-              onSaveModelConfig={onSaveModelConfig}
-              onGenerateSummary={onGenerateSummary}
-              customPrompt={customPrompt}
-              summaryStatus={summaryStatus}
-              availableTemplates={availableTemplates}
-              selectedTemplate={selectedTemplate}
-              onTemplateSelect={onTemplateSelect}
-              hasTranscripts={transcripts.length > 0}
-              isModelConfigLoading={isModelConfigLoading}
+      {/* Tab Content */}
+      <div className="flex-1 overflow-hidden">
+        {/* Chat Tab Content */}
+        {activeTab === 'chat' && (
+          <div className="h-full">
+            <MeetingChat
+              meetingId={meeting.id}
+              modelProvider={modelConfig.provider || ''}
+              modelName={modelConfig.model || ''}
             />
           </div>
-          {/* Loading spinner */}
-          <div className="flex items-center justify-center flex-1">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-gray-600">Generating AI Summary...</p>
-            </div>
-          </div>
-        </div>
-      ) : !aiSummary ? (
-        <div className="flex flex-col h-full">
-          {/* Centered Summary Generator Button Group when no summary */}
-          <div className="flex items-center justify-center pt-8 pb-4">
-            <SummaryGeneratorButtonGroup
-              modelConfig={modelConfig}
-              setModelConfig={setModelConfig}
-              onSaveModelConfig={onSaveModelConfig}
-              onGenerateSummary={onGenerateSummary}
-              customPrompt={customPrompt}
-              summaryStatus={summaryStatus}
-              availableTemplates={availableTemplates}
-              selectedTemplate={selectedTemplate}
-              onTemplateSelect={onTemplateSelect}
-              hasTranscripts={transcripts.length > 0}
-              isModelConfigLoading={isModelConfigLoading}
-            />
-          </div>
-          {/* Empty state message */}
-          <EmptyStateSummary
-            onGenerate={() => onGenerateSummary(customPrompt)}
-            hasModel={modelConfig.provider !== null && modelConfig.model !== null}
-            isGenerating={isSummaryLoading}
-          />
-        </div>
-      ) : transcripts?.length > 0 && (
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Summary Section - 60% of height */}
-          <div className="flex-[3] overflow-y-auto min-h-0">
+        )}
+
+        {/* Summary Tab Content */}
+        {activeTab === 'summary' && (
+          <>
+            {isSummaryLoading ? (
+              <div className="flex flex-col h-full">
+                {/* Show button group during generation */}
+                <div className="flex items-center justify-center pt-8 pb-4">
+                  <SummaryGeneratorButtonGroup
+                    modelConfig={modelConfig}
+                    setModelConfig={setModelConfig}
+                    onSaveModelConfig={onSaveModelConfig}
+                    onGenerateSummary={onGenerateSummary}
+                    customPrompt={customPrompt}
+                    summaryStatus={summaryStatus}
+                    availableTemplates={availableTemplates}
+                    selectedTemplate={selectedTemplate}
+                    onTemplateSelect={onTemplateSelect}
+                    hasTranscripts={transcripts.length > 0}
+                    isModelConfigLoading={isModelConfigLoading}
+                  />
+                </div>
+                {/* Loading spinner */}
+                <div className="flex items-center justify-center flex-1">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+                    <p className="text-gray-600">Generating AI Summary...</p>
+                  </div>
+                </div>
+              </div>
+            ) : !aiSummary ? (
+              <div className="flex flex-col h-full">
+                {/* Centered Summary Generator Button Group when no summary */}
+                <div className="flex items-center justify-center pt-8 pb-4">
+                  <SummaryGeneratorButtonGroup
+                    modelConfig={modelConfig}
+                    setModelConfig={setModelConfig}
+                    onSaveModelConfig={onSaveModelConfig}
+                    onGenerateSummary={onGenerateSummary}
+                    customPrompt={customPrompt}
+                    summaryStatus={summaryStatus}
+                    availableTemplates={availableTemplates}
+                    selectedTemplate={selectedTemplate}
+                    onTemplateSelect={onTemplateSelect}
+                    hasTranscripts={transcripts.length > 0}
+                    isModelConfigLoading={isModelConfigLoading}
+                  />
+                </div>
+                {/* Empty state message */}
+                <EmptyStateSummary
+                  onGenerate={() => onGenerateSummary(customPrompt)}
+                  hasModel={modelConfig.provider !== null && modelConfig.model !== null}
+                  isGenerating={isSummaryLoading}
+                />
+              </div>
+            ) : transcripts?.length > 0 && (
+              <div className="h-full overflow-y-auto">
             {summaryResponse && (
               <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 max-h-1/3 overflow-y-auto">
                 <h3 className="text-lg font-semibold mb-2">Meeting Summary</h3>
@@ -255,26 +304,19 @@ export function SummaryPanel({
                 }}
               />
             </div>
-            {summaryStatus !== 'idle' && (
-              <div className={`mt-4 p-4 rounded-lg ${summaryStatus === 'error' ? 'bg-red-100 text-red-700' :
-                summaryStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                  'bg-blue-100 text-blue-700'
-                }`}>
-                <p className="text-sm font-medium">{getSummaryStatusMessage(summaryStatus)}</p>
+                {summaryStatus !== 'idle' && (
+                  <div className={`mt-4 mx-6 p-4 rounded-lg ${summaryStatus === 'error' ? 'bg-red-100 text-red-700' :
+                    summaryStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                    <p className="text-sm font-medium">{getSummaryStatusMessage(summaryStatus)}</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-
-          {/* Chat Section - 40% of height, fixed at bottom */}
-          <div className="flex-[2] border-t border-gray-200 min-h-0">
-            <MeetingChat
-              meetingId={meeting.id}
-              modelProvider={modelConfig.provider || ''}
-              modelName={modelConfig.model || ''}
-            />
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

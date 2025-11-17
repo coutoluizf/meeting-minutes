@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [2025-11-17]
+
+### Added
+- Tab-based interface for Meeting Notes (Chat and Summary tabs)
+- Chat tab as default view (core business focus)
+- Full-height layout for both Chat and Summary tabs
+
+### Changed
+- Reorganized SummaryPanel with tab navigation system
+- Moved MeetingChat to dedicated full-screen tab
+- Increased chat message font size from `text-sm` to `text-base` for better readability
+
+### Fixed
+- Tauri API import error in MeetingChat component (changed from `@tauri-apps/api/tauri` to `@tauri-apps/api/core`)
+- Rust compilation errors in chat/service.rs (missing repository functions)
+- Unused import warnings in chat_message.rs and notifications/commands.rs
+- Unused variable warning in api.rs
+
+## [Previous Releases]
+
+### Added
+
 #### Documentation
 - 439 new lines in CLAUDE.md with comprehensive documentation covering:
   - Complete Generate Summary System documentation

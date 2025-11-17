@@ -1,7 +1,7 @@
 use crate::database::models::ChatMessage;
 use chrono::Utc;
 use sqlx::{Error as SqlxError, SqlitePool};
-use tracing::{error, info};
+use tracing::info;
 use uuid::Uuid;
 
 pub struct ChatMessagesRepository;
