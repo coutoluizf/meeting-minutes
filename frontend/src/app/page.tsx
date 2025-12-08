@@ -1494,41 +1494,51 @@ export default function Home() {
 
   // Listen for model download completion to auto-close modal
   useEffect(() => {
+    let cleanup: (() => void) | null = null;
+
     const setupDownloadListeners = async () => {
       const unlisteners: (() => void)[] = [];
 
-      // Listen for Whisper model download complete
-      const unlistenWhisper = await listen<{ modelName: string }>('model-download-complete', (event) => {
-        const { modelName } = event.payload;
-        console.log('[HomePage] Whisper model download complete:', modelName);
+      try {
+        // Listen for Whisper model download complete
+        const unlistenWhisper = await listen<{ modelName: string }>('model-download-complete', (event) => {
+          const { modelName } = event.payload;
+          console.log('[HomePage] Whisper model download complete:', modelName);
 
-        // Auto-close modal if the downloaded model matches the selected one
-        if (transcriptModelConfig.provider === 'localWhisper' && transcriptModelConfig.model === modelName) {
-          toast.success('Model ready! Closing window...', { duration: 1500 });
-          setTimeout(() => setShowModelSelector(false), 1500);
-        }
-      });
-      unlisteners.push(unlistenWhisper);
+          // Auto-close modal if the downloaded model matches the selected one
+          if (transcriptModelConfig.provider === 'localWhisper' && transcriptModelConfig.model === modelName) {
+            toast.success('Model ready! Closing window...', { duration: 1500 });
+            setTimeout(() => setShowModelSelector(false), 1500);
+          }
+        });
+        unlisteners.push(unlistenWhisper);
 
-      // Listen for Parakeet model download complete
-      const unlistenParakeet = await listen<{ modelName: string }>('parakeet-model-download-complete', (event) => {
-        const { modelName } = event.payload;
-        console.log('[HomePage] Parakeet model download complete:', modelName);
+        // Listen for Parakeet model download complete
+        const unlistenParakeet = await listen<{ modelName: string }>('parakeet-model-download-complete', (event) => {
+          const { modelName } = event.payload;
+          console.log('[HomePage] Parakeet model download complete:', modelName);
 
-        // Auto-close modal if the downloaded model matches the selected one
-        if (transcriptModelConfig.provider === 'parakeet' && transcriptModelConfig.model === modelName) {
-          toast.success('Model ready! Closing window...', { duration: 1500 });
-          setTimeout(() => setShowModelSelector(false), 1500);
-        }
-      });
-      unlisteners.push(unlistenParakeet);
+          // Auto-close modal if the downloaded model matches the selected one
+          if (transcriptModelConfig.provider === 'parakeet' && transcriptModelConfig.model === modelName) {
+            toast.success('Model ready! Closing window...', { duration: 1500 });
+            setTimeout(() => setShowModelSelector(false), 1500);
+          }
+        });
+        unlisteners.push(unlistenParakeet);
 
-      return () => {
-        unlisteners.forEach(unsub => unsub());
-      };
+        cleanup = () => {
+          unlisteners.forEach(unsub => unsub());
+        };
+      } catch (error) {
+        console.error('Failed to setup download listeners:', error);
+      }
     };
 
     setupDownloadListeners();
+
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, [transcriptModelConfig]);
 
   const isSummaryLoading = summaryStatus === 'processing' || summaryStatus === 'summarizing' || summaryStatus === 'regenerating';

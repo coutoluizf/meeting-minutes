@@ -33,6 +33,9 @@ export default function RootLayout({
   const [showImportDialog, setShowImportDialog] = useState(false)
 
   useEffect(() => {
+    let unlistenFirstLaunch: (() => void) | null = null
+    let unlistenDbInit: (() => void) | null = null
+
     // Check first launch state immediately on mount (reliable)
     invoke<boolean>('check_first_launch')
       .then((isFirstLaunch) => {
@@ -47,20 +50,28 @@ export default function RootLayout({
       })
 
     // Also listen for events (fallback for hot reload and edge cases)
-    const unlistenFirstLaunch = listen('first-launch-detected', () => {
+    listen('first-launch-detected', () => {
       console.log('First launch event received - showing import dialog')
       setShowImportDialog(true)
+    }).then((unlisten) => {
+      unlistenFirstLaunch = unlisten
+    }).catch((error) => {
+      console.error('Failed to setup first launch listener:', error)
     })
 
     // Listen for database initialized event
-    const unlistenDbInit = listen('database-initialized', () => {
+    listen('database-initialized', () => {
       console.log('Database initialized - hiding import dialog')
       setShowImportDialog(false)
+    }).then((unlisten) => {
+      unlistenDbInit = unlisten
+    }).catch((error) => {
+      console.error('Failed to setup database initialized listener:', error)
     })
 
     return () => {
-      unlistenFirstLaunch.then((fn) => fn())
-      unlistenDbInit.then((fn) => fn())
+      if (unlistenFirstLaunch) unlistenFirstLaunch()
+      if (unlistenDbInit) unlistenDbInit()
     }
   }, [])
 
