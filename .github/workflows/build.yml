@@ -66,6 +66,18 @@ jobs:
         with:
           workspaces: './frontend/src-tauri -> target'
 
+      # Install Windows build dependencies (CMake, LLVM, Ninja for whisper-rs)
+      - name: Install Windows build dependencies
+        if: matrix.platform == 'windows-latest'
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install ninja -y
+          choco install llvm -y
+          echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
+          echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
+          echo "CC=clang" >> $env:GITHUB_ENV
+          echo "CXX=clang++" >> $env:GITHUB_ENV
+
       # Install frontend dependencies (use frozen-lockfile to ensure exact versions)
       - name: Install frontend dependencies
         working-directory: ./frontend
