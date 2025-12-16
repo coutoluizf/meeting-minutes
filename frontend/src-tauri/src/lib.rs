@@ -49,7 +49,10 @@ pub mod state;
 pub mod summary;
 pub mod tray;
 pub mod utils;
-pub mod whisper_engine;
+// NOTE: whisper_engine module disabled - Meetily now uses Parakeet exclusively
+// whisper_engine was removed because it requires GPU SDKs (Vulkan, CUDA, Metal) at build time
+// Parakeet uses ONNX Runtime which handles GPU detection at runtime
+// pub mod whisper_engine;
 
 use audio::{list_audio_devices, AudioDevice};
 use log::{error as log_error, info as log_info};
@@ -275,7 +278,8 @@ async fn is_audio_level_monitoring() -> bool {
 
 // Analytics commands are now handled by analytics::commands module
 
-// Whisper commands are now handled by whisper_engine::commands module
+// NOTE: Whisper engine disabled - using Parakeet exclusively
+// Whisper commands were previously handled by whisper_engine::commands module
 
 #[tauri::command]
 async fn get_audio_devices() -> Result<Vec<AudioDevice>, String> {
@@ -394,7 +398,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
-        .manage(whisper_engine::parallel_commands::ParallelProcessorState::new())
+        // NOTE: Whisper parallel processor state removed - using Parakeet exclusively
+        // .manage(whisper_engine::parallel_commands::ParallelProcessorState::new())
         .manage(Arc::new(RwLock::new(
             None::<notifications::manager::NotificationManager<tauri::Wry>>,
         )) as NotificationManagerState<tauri::Wry>)
@@ -433,15 +438,13 @@ pub fn run() {
                 }
             });
 
-            // Set models directory to use app_data_dir (unified storage location)
-            whisper_engine::commands::set_models_directory(&_app.handle());
-
-            // Initialize Whisper engine on startup
-            tauri::async_runtime::spawn(async {
-                if let Err(e) = whisper_engine::commands::whisper_init().await {
-                    log::error!("Failed to initialize Whisper engine on startup: {}", e);
-                }
-            });
+            // NOTE: Whisper engine initialization removed - using Parakeet exclusively
+            // whisper_engine::commands::set_models_directory(&_app.handle());
+            // tauri::async_runtime::spawn(async {
+            //     if let Err(e) = whisper_engine::commands::whisper_init().await {
+            //         log::error!("Failed to initialize Whisper engine on startup: {}", e);
+            //     }
+            // });
 
             // Set Parakeet models directory
             parakeet_engine::commands::set_models_directory(&_app.handle());
@@ -513,18 +516,19 @@ pub fn run() {
             analytics::commands::track_analytics_enabled,
             analytics::commands::track_analytics_disabled,
             analytics::commands::track_analytics_transparency_viewed,
-            whisper_engine::commands::whisper_init,
-            whisper_engine::commands::whisper_get_available_models,
-            whisper_engine::commands::whisper_load_model,
-            whisper_engine::commands::whisper_get_current_model,
-            whisper_engine::commands::whisper_is_model_loaded,
-            whisper_engine::commands::whisper_has_available_models,
-            whisper_engine::commands::whisper_validate_model_ready,
-            whisper_engine::commands::whisper_transcribe_audio,
-            whisper_engine::commands::whisper_get_models_directory,
-            whisper_engine::commands::whisper_download_model,
-            whisper_engine::commands::whisper_cancel_download,
-            whisper_engine::commands::whisper_delete_corrupted_model,
+            // NOTE: Whisper commands disabled - using Parakeet exclusively
+            // whisper_engine::commands::whisper_init,
+            // whisper_engine::commands::whisper_get_available_models,
+            // whisper_engine::commands::whisper_load_model,
+            // whisper_engine::commands::whisper_get_current_model,
+            // whisper_engine::commands::whisper_is_model_loaded,
+            // whisper_engine::commands::whisper_has_available_models,
+            // whisper_engine::commands::whisper_validate_model_ready,
+            // whisper_engine::commands::whisper_transcribe_audio,
+            // whisper_engine::commands::whisper_get_models_directory,
+            // whisper_engine::commands::whisper_download_model,
+            // whisper_engine::commands::whisper_cancel_download,
+            // whisper_engine::commands::whisper_delete_corrupted_model,
             // Parakeet engine commands
             parakeet_engine::commands::parakeet_init,
             parakeet_engine::commands::parakeet_get_available_models,
@@ -539,18 +543,18 @@ pub fn run() {
             parakeet_engine::commands::parakeet_cancel_download,
             parakeet_engine::commands::parakeet_delete_corrupted_model,
             parakeet_engine::commands::open_parakeet_models_folder,
-            // Parallel processing commands
-            whisper_engine::parallel_commands::initialize_parallel_processor,
-            whisper_engine::parallel_commands::start_parallel_processing,
-            whisper_engine::parallel_commands::pause_parallel_processing,
-            whisper_engine::parallel_commands::resume_parallel_processing,
-            whisper_engine::parallel_commands::stop_parallel_processing,
-            whisper_engine::parallel_commands::get_parallel_processing_status,
-            whisper_engine::parallel_commands::get_system_resources,
-            whisper_engine::parallel_commands::check_resource_constraints,
-            whisper_engine::parallel_commands::calculate_optimal_workers,
-            whisper_engine::parallel_commands::prepare_audio_chunks,
-            whisper_engine::parallel_commands::test_parallel_processing_setup,
+            // NOTE: Whisper parallel processing commands disabled - using Parakeet exclusively
+            // whisper_engine::parallel_commands::initialize_parallel_processor,
+            // whisper_engine::parallel_commands::start_parallel_processing,
+            // whisper_engine::parallel_commands::pause_parallel_processing,
+            // whisper_engine::parallel_commands::resume_parallel_processing,
+            // whisper_engine::parallel_commands::stop_parallel_processing,
+            // whisper_engine::parallel_commands::get_parallel_processing_status,
+            // whisper_engine::parallel_commands::get_system_resources,
+            // whisper_engine::parallel_commands::check_resource_constraints,
+            // whisper_engine::parallel_commands::calculate_optimal_workers,
+            // whisper_engine::parallel_commands::prepare_audio_chunks,
+            // whisper_engine::parallel_commands::test_parallel_processing_setup,
             get_audio_devices,
             start_recording_with_devices,
             start_recording_with_devices_and_meeting,
@@ -666,7 +670,9 @@ pub fn run() {
             // Database and Models path commands
             database::commands::get_database_directory,
             database::commands::open_database_folder,
-            whisper_engine::commands::open_models_folder,
+            // NOTE: Whisper open_models_folder disabled - using Parakeet models folder instead
+            // whisper_engine::commands::open_models_folder,
+            parakeet_engine::commands::open_parakeet_models_folder,
             // System settings commands
             #[cfg(target_os = "macos")]
             utils::open_system_settings,

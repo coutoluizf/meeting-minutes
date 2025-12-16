@@ -5,13 +5,17 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Eye, EyeOff, Lock, Unlock } from 'lucide-react';
-import { ModelManager } from './WhisperModelManager';
+// NOTE: WhisperModelManager was removed - using ParakeetModelManager only
+// import { ModelManager } from './WhisperModelManager';
 import { ParakeetModelManager } from './ParakeetModelManager';
 import { useTranslation } from 'react-i18next';
 
 
+// NOTE: localWhisper was removed - Meetily now uses Parakeet exclusively
+// Whisper (whisper-rs) was removed because it required GPU SDKs (Vulkan, CUDA, Metal) at build time
+// Parakeet uses ONNX Runtime which handles GPU detection at runtime
 export interface TranscriptModelProps {
-    provider: 'localWhisper' | 'parakeet' | 'deepgram' | 'elevenLabs' | 'groq' | 'openai';
+    provider: 'parakeet' | 'deepgram' | 'elevenLabs' | 'groq' | 'openai';
     model: string;
     apiKey?: string | null;
 }
@@ -28,11 +32,13 @@ export function TranscriptSettings({ transcriptModelConfig, setTranscriptModelCo
     const [showApiKey, setShowApiKey] = useState<boolean>(false);
     const [isApiKeyLocked, setIsApiKeyLocked] = useState<boolean>(true);
     const [isLockButtonVibrating, setIsLockButtonVibrating] = useState<boolean>(false);
-    const [selectedWhisperModel, setSelectedWhisperModel] = useState<string>(transcriptModelConfig.provider === 'localWhisper' ? transcriptModelConfig.model : 'small');
+    // NOTE: Whisper model state removed - using Parakeet only
+    // const [selectedWhisperModel, setSelectedWhisperModel] = useState<string>('small');
     const [selectedParakeetModel, setSelectedParakeetModel] = useState<string>(transcriptModelConfig.provider === 'parakeet' ? transcriptModelConfig.model : 'parakeet-tdt-0.6b-v3-int8');
 
     useEffect(() => {
-        if (transcriptModelConfig.provider === 'localWhisper' || transcriptModelConfig.provider === 'parakeet') {
+        // Parakeet doesn't require API key
+        if (transcriptModelConfig.provider === 'parakeet') {
             setApiKey(null);
         }
     }, [transcriptModelConfig.provider]);
@@ -48,8 +54,8 @@ export function TranscriptSettings({ transcriptModelConfig, setTranscriptModelCo
             setApiKey(null);
         }
     };
+    // NOTE: localWhisper removed - Parakeet is the only local transcription engine
     const modelOptions = {
-        localWhisper: [selectedWhisperModel],
         parakeet: [selectedParakeetModel],
         deepgram: ['nova-2-phonecall'],
         elevenLabs: ['eleven_multilingual_v2'],
@@ -65,19 +71,8 @@ export function TranscriptSettings({ transcriptModelConfig, setTranscriptModelCo
         }
     };
 
-    const handleWhisperModelSelect = (modelName: string) => {
-        setSelectedWhisperModel(modelName);
-        if (transcriptModelConfig.provider === 'localWhisper') {
-            setTranscriptModelConfig({
-                ...transcriptModelConfig,
-                model: modelName
-            });
-            // Close modal after selection
-            if (onModelSelect) {
-                onModelSelect();
-            }
-        }
-    };
+    // NOTE: handleWhisperModelSelect removed - using Parakeet only
+    // const handleWhisperModelSelect = (modelName: string) => { ... };
 
     const handleParakeetModelSelect = (modelName: string) => {
         setSelectedParakeetModel(modelName);
@@ -109,9 +104,10 @@ export function TranscriptSettings({ transcriptModelConfig, setTranscriptModelCo
                                 value={transcriptModelConfig.provider}
                                 onValueChange={(value) => {
                                     const provider = value as TranscriptModelProps['provider'];
-                                    const newModel = provider === 'localWhisper' ? selectedWhisperModel : modelOptions[provider][0];
+                                    const newModel = modelOptions[provider][0];
                                     setTranscriptModelConfig({ ...transcriptModelConfig, provider, model: newModel });
-                                    if (provider !== 'localWhisper') {
+                                    // Fetch API key for cloud providers
+                                    if (provider !== 'parakeet') {
                                         fetchApiKey(provider);
                                     }
                                 }}
@@ -120,16 +116,18 @@ export function TranscriptSettings({ transcriptModelConfig, setTranscriptModelCo
                                     <SelectValue placeholder={t('settings.transcription.selectProvider')} />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {/* NOTE: localWhisper was removed - Parakeet is the only local transcription option */}
                                     <SelectItem value="parakeet">{t('settings.transcription.parakeetRecommended')}</SelectItem>
-                                    <SelectItem value="localWhisper">{t('settings.transcription.localWhisperAccurate')}</SelectItem>
-                                    {/* <SelectItem value="deepgram">☁️ Deepgram (Backup)</SelectItem>
+                                    {/* Cloud providers (commented out for now):
+                                    <SelectItem value="deepgram">☁️ Deepgram (Backup)</SelectItem>
                                     <SelectItem value="elevenLabs">☁️ ElevenLabs</SelectItem>
                                     <SelectItem value="groq">☁️ Groq</SelectItem>
                                     <SelectItem value="openai">☁️ OpenAI</SelectItem> */}
                                 </SelectContent>
                             </Select>
 
-                            {transcriptModelConfig.provider !== 'localWhisper' && transcriptModelConfig.provider !== 'parakeet' && (
+                            {/* Cloud provider model selector (only shown for non-Parakeet providers) */}
+                            {transcriptModelConfig.provider !== 'parakeet' && (
                                 <Select
                                     value={transcriptModelConfig.model}
                                     onValueChange={(value) => {
@@ -151,16 +149,14 @@ export function TranscriptSettings({ transcriptModelConfig, setTranscriptModelCo
                         </div>
                     </div>
 
-                    {transcriptModelConfig.provider === 'localWhisper' && (
+                    {/* NOTE: Whisper ModelManager removed - using Parakeet only */}
+                    {/* {transcriptModelConfig.provider === 'localWhisper' && (
                         <div className="mt-6">
-                            <ModelManager
-                                selectedModel={selectedWhisperModel}
-                                onModelSelect={handleWhisperModelSelect}
-                                autoSave={true}
-                            />
+                            <ModelManager ... />
                         </div>
-                    )}
+                    )} */}
 
+                    {/* Parakeet is the only local transcription option */}
                     {transcriptModelConfig.provider === 'parakeet' && (
                         <div className="mt-6">
                             <ParakeetModelManager

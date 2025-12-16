@@ -15,42 +15,37 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 
-# Hardware acceleration features for whisper-rs
-# Cross-platform GPU acceleration with smart defaults
+# =============================================================================
+# TRANSCRIPTION ENGINE: Parakeet (ONNX-based)
+# =============================================================================
+# Meetily uses Parakeet as the sole transcription engine.
+# Parakeet uses ONNX Runtime which automatically detects GPU at runtime.
+# No special build dependencies required (no Vulkan SDK, CUDA SDK, etc.)
 #
 # BUILD INSTRUCTIONS:
 # ===================
-# macOS:     cargo build --release              (Metal GPU auto-enabledon)
+# All platforms:  cargo build --release
 #
-# Windows:   cargo build --release              (CPU with OpenBLAS)
-#            cargo build --release --features cuda    (NVIDIA GPU)
-#            cargo build --release --features vulkan  (AMD/Intel GPU)
+# GPU acceleration is handled automatically by ONNX Runtime at runtime:
+# - macOS: CoreML/Metal
+# - Windows: DirectML/CUDA
+# - Linux: CUDA
 #
-# Linux:     cargo build --release              (CPU with OpenBLAS)
-#            cargo build --release --features cuda    (NVIDIA GPU)
-#            cargo build --release --features hipblas (AMD GPU with ROCm)
-#            cargo build --release --features vulkan  (Other GPUs)
-#
-# QUICK START: Use the helper scripts!
-#   ./build-gpu.sh (Unix/macOS)
-#   .\build-gpu.ps1 (Windows PowerShell)
-#
+# =============================================================================
+# NOTE: Whisper support was removed in favor of Parakeet for simpler builds.
+# Parakeet provides faster transcription (15x) with better accuracy (6% vs 10% WER)
+# and doesn't require GPU SDKs at build time.
+# =============================================================================
+
 [features]
-default = ["platform-default"]  # Automatically enables best backend per platform
+default = []
 
-# Platform-appropriate defaults - see target-specific dependencies below
-platform-default = []
-
-# Manual GPU acceleration options (for power users to override defaults)
-metal = ["whisper-rs/metal"]       # macOS: Apple Metal GPU (Auto-enabled on macOS)
-coreml = ["whisper-rs/coreml"]     # macOS: Apple CoreML acceleration
-cuda = ["whisper-rs/cuda"]         # Windows/Linux: NVIDIA CUDA GPU
-vulkan = ["whisper-rs/vulkan"]     # Windows/Linux: AMD/Intel Vulkan GPU
-hipblas = ["whisper-rs/hipblas"]   # Linux: AMD ROCm HIP
-
-# CPU optimizations (fallback for systems without GPU)
-openblas = ["whisper-rs/openblas"] # Optimized BLAS (Auto-enabled on Windows/Linux)
-openmp = ["whisper-rs/openmp"]     # OpenMP parallel processing
+# Legacy feature flags - kept for compatibility but no longer functional
+# These were used for whisper-rs GPU acceleration
+coreml = []  # Previously: macOS CoreML acceleration (now handled by ONNX Runtime)
+metal = []   # Previously: macOS Metal GPU (now handled by ONNX Runtime)
+cuda = []    # Previously: NVIDIA CUDA (now handled by ONNX Runtime)
+vulkan = []  # Previously: AMD/Intel Vulkan (now handled by ONNX Runtime)
 
 [build-dependencies]
 tauri-build = { version = "2.3.0", features = [] }
@@ -93,9 +88,8 @@ ebur128 = "0.1"
 # Noise suppression - RNNoise-based neural network noise reduction
 nnnoiseless = "0.5"
 
-# Whisper-rs for speech recognition - BASE dependency (no GPU features)
-# Platform-specific GPU features are added via target-specific dependencies below
-whisper-rs = { version = "0.13.2", features = ["raw-api"] }
+# NOTE: whisper-rs was removed - Meetily now uses Parakeet (ONNX-based) exclusively
+# whisper-rs = { version = "0.13.2", features = ["raw-api"] }
 futures-util = "0.3"
 silero_rs = { git = "https://github.com/emotechlab/silero-rs", rev = "26a6460", package = "silero" }
 
@@ -146,7 +140,7 @@ tauri-plugin-dialog = "2.3.0"
 tauri-plugin-store = "2.4.0"
 tauri-plugin-notification = "2.3.1"
 
-# macOS-specific dependencies with Metal GPU acceleration
+# macOS-specific dependencies
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri = { version = "2.6.2", features = ["protocol-asset", "macos-private-api", "tray-icon"] }
 once_cell = "1.17.1"
@@ -159,31 +153,17 @@ core-graphics = "0.23"
 cidre = { git = "https://github.com/yury/cidre", rev = "a9587fa", features = ["av"] }
 dasp = "0.11.0"
 futures-channel = "0.3.31"
-
-# PERFORMANCE: Enable Metal GPU + CoreML acceleration automatically on macOS
-# CoreML provides additional acceleration for Apple Silicon chips
-whisper-rs = { version = "0.13.2", features = ["raw-api", "metal", "coreml"] }
+# NOTE: whisper-rs removed - using Parakeet (ONNX) for transcription
 
 # Windows-specific dependencies
-# Default: CPU-only build (no BLAS)
-# Users can enable features manually:
-#   --features cuda     (NVIDIA GPUs)
-#   --features vulkan   (AMD/Intel GPUs)
-#   --features openblas (OpenBLAS optimization, requires BLAS_INCLUDE_DIRS)
 [target.'cfg(target_os = "windows")'.dependencies]
-whisper-rs = { version = "0.13.2", features = ["raw-api", "vulkan"] }
 futures-channel = "0.3.31"
+# NOTE: whisper-rs removed - no longer need Vulkan SDK for builds!
 
 # Linux-specific dependencies
-# Default: CPU-only build (no BLAS)
-# Users can enable features manually:
-#   --features cuda     (NVIDIA GPUs)
-#   --features vulkan   (AMD/Intel GPUs)
-#   --features hipblas  (AMD ROCm)
-#   --features openblas (OpenBLAS optimization, requires BLAS_INCLUDE_DIRS)
 [target.'cfg(target_os = "linux")'.dependencies]
-whisper-rs = { version = "0.13.2", features = ["raw-api"] }
 futures-channel = "0.3.31"
+# NOTE: whisper-rs removed - using Parakeet (ONNX) for transcription
 
 [dev-dependencies]
 tempfile = "3.3.0"

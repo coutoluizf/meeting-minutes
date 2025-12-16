@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [2025-12-16]
+
+### Changed - Transcription Engine Simplification
+
+#### Removed Whisper (whisper-rs) - Now Using Parakeet Only
+
+**Why this change was made:**
+- Whisper (whisper-rs) required GPU SDKs (Vulkan, CUDA, Metal) at build time
+- Windows CI builds were failing due to Vulkan SDK installation issues (~50+ minute downloads, broken Chocolatey packages)
+- Parakeet provides significantly better performance:
+  - **15x faster** transcription (RTFx 3386 vs 216)
+  - **Better accuracy** (6.05% WER vs 10-12% WER)
+  - **Better for noisy audio** (21.58% WER vs 29.80%)
+  - **Smaller model size** (~670MB vs ~3GB for Whisper Large)
+
+**Technical changes:**
+- Removed `whisper-rs` dependency from `Cargo.toml`
+- Disabled `whisper_engine` module in `lib.rs` (code kept for future reference)
+- Updated `TranscriptionEngine` enum to only include Parakeet variant
+- Removed Vulkan SDK and Windows build dependencies from GitHub Actions workflow
+- Updated UI (`TranscriptSettings.tsx`) to show only Parakeet option
+
+**Benefits:**
+- Simpler builds: No GPU SDKs required at build time
+- Faster CI: Removed ~10 minutes of Windows dependency installation
+- Cross-platform: ONNX Runtime handles GPU detection at runtime
+- Better user experience: Parakeet downloads model once (~670MB), works immediately
+
+**Migration notes:**
+- Users with `localWhisper` config will automatically use Parakeet
+- Whisper models can be deleted from the models folder
+- No user action required - Parakeet model will auto-download on first use
+
+### Technical Details
+- **Transcription Engine**: Parakeet (NVIDIA NeMo) via ONNX Runtime
+- **Model**: parakeet-tdt-0.6b-v3-int8 (~670MB)
+- **GPU Support**: Automatic via ONNX Runtime (CoreML on macOS, DirectML/CUDA on Windows)
+- **Languages**: English and Portuguese (tested and working)
+
 ## [2025-11-17]
 
 ### Added
