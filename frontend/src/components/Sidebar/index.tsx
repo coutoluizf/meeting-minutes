@@ -62,9 +62,10 @@ const Sidebar: React.FC = () => {
     apiKey: null,
     ollamaEndpoint: null
   });
+  // NOTE: Default to parakeet (localWhisper was removed)
   const [transcriptModelConfig, setTranscriptModelConfig] = useState<TranscriptModelProps>({
-    provider: 'localWhisper',
-    model: 'large-v3',
+    provider: 'parakeet',
+    model: 'parakeet-tdt-0.6b-v3-int8',
   });
   const [settingsSaveSuccess, setSettingsSaveSuccess] = useState<boolean | null>(null);
 

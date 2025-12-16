@@ -1505,11 +1505,13 @@ export default function Home() {
           const { modelName } = event.payload;
           console.log('[HomePage] Whisper model download complete:', modelName);
 
+          // NOTE: Whisper was removed - this event listener is kept for backward compatibility
+          // but will never trigger since localWhisper provider no longer exists
           // Auto-close modal if the downloaded model matches the selected one
-          if (transcriptModelConfig.provider === 'localWhisper' && transcriptModelConfig.model === modelName) {
-            toast.success('Model ready! Closing window...', { duration: 1500 });
-            setTimeout(() => setShowModelSelector(false), 1500);
-          }
+          // if (transcriptModelConfig.provider === 'localWhisper' && transcriptModelConfig.model === modelName) {
+          //   toast.success('Model ready! Closing window...', { duration: 1500 });
+          //   setTimeout(() => setShowModelSelector(false), 1500);
+          // }
         });
         unlisteners.push(unlistenWhisper);
 

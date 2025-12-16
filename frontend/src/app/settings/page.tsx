@@ -14,9 +14,10 @@ type SettingsTab = 'general' | 'recording' | 'Transcriptionmodels' | 'summaryMod
 export default function SettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+  // NOTE: Default to parakeet (localWhisper was removed)
   const [transcriptModelConfig, setTranscriptModelConfig] = useState<TranscriptModelProps>({
-    provider: 'localWhisper',
-    model: 'large-v3',
+    provider: 'parakeet',
+    model: 'parakeet-tdt-0.6b-v3-int8',
     apiKey: null
   });
 
@@ -34,9 +35,11 @@ export default function SettingsPage() {
         const config = await invoke('api_get_transcript_config') as any;
         if (config) {
           console.log('Loaded saved transcript config:', config);
+          // NOTE: Default to parakeet if no provider saved (localWhisper was removed)
+          const provider = config.provider === 'localWhisper' ? 'parakeet' : (config.provider || 'parakeet');
           setTranscriptModelConfig({
-            provider: config.provider || 'localWhisper',
-            model: config.model || 'large-v3',
+            provider: provider as TranscriptModelProps['provider'],
+            model: config.model || 'parakeet-tdt-0.6b-v3-int8',
             apiKey: config.apiKey || null
           });
         }
