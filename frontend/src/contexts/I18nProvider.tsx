@@ -35,9 +35,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       })
   }, [])
 
-  // Don't render children until language is loaded
+  // Show loading indicator while language is being fetched
+  // Previously returned null which could cause blank screen if invoke fails
   if (!isReady) {
-    return null
+    return <div className="flex items-center justify-center h-screen">Loading...</div>
   }
 
   return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
