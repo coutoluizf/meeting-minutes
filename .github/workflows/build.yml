@@ -66,17 +66,24 @@ jobs:
         with:
           workspaces: './frontend/src-tauri -> target'
 
-      # Install Windows build dependencies (CMake, LLVM, Ninja for whisper-rs)
+      # Install Windows build dependencies (CMake, LLVM, Ninja, Vulkan SDK for whisper-rs)
       - name: Install Windows build dependencies
         if: matrix.platform == 'windows-latest'
         run: |
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
           choco install ninja -y
           choco install llvm -y
+          choco install vulkan-sdk -y
           echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
           echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
           echo "CC=clang" >> $env:GITHUB_ENV
           echo "CXX=clang++" >> $env:GITHUB_ENV
+          # Set VULKAN_SDK environment variable (chocolatey installs to VulkanSDK folder)
+          $vulkanPath = Get-ChildItem -Path "C:\VulkanSDK" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          if ($vulkanPath) {
+            echo "VULKAN_SDK=$($vulkanPath.FullName)" >> $env:GITHUB_ENV
+            echo "$($vulkanPath.FullName)\Bin" >> $env:GITHUB_PATH
+          }
 
       # Install frontend dependencies (use frozen-lockfile to ensure exact versions)
       - name: Install frontend dependencies
