@@ -11,15 +11,42 @@
 
 O Meetily é um app desktop (Tauri) de gravação e transcrição de reuniões, 100% local. Estamos adicionando cloud sync via Supabase para permitir acesso de múltiplos dispositivos e via web. Este mini-plan configura toda a infraestrutura Supabase.
 
+## Projeto Supabase (já criado)
+
+| Campo | Valor |
+|-------|-------|
+| **Organization** | meetpix (PRO) |
+| **Project name** | meetpix |
+| **Project ID** | `qugnyuswbyblychfkdef` |
+| **Region** | Americas |
+| **Compute** | MICRO (1 GB RAM / 2-core ARM CPU) |
+| **URL** | `https://qugnyuswbyblychfkdef.supabase.co` |
+| **Automatic RLS** | Habilitado (RLS auto em novas tabelas) |
+| **Data API** | Habilitado (RESTful API auto-gerada) |
+
+> **Credenciais**: Todas as keys estão em `.env.local` na raiz do projeto. Nunca commitar esse arquivo.
+
+## Estratégia de Acesso a Dados (RLS direto, sem API custom)
+
+**Regra fundamental**: Clientes (Web UI e Tauri) acessam o Supabase **diretamente** via `supabase-js` com a `anon_key` + RLS policies. **Não há API intermediária** para dados do próprio usuário.
+
+| Cenário | Acesso | Key usada |
+|---------|--------|-----------|
+| Dados do próprio usuário (meetings, transcripts, etc.) | Direto via `supabase-js` | `anon_key` + RLS (`auth.uid() = user_id`) |
+| Edge Functions (embedding, copilot) | HTTP POST autenticado | JWT do usuário |
+| Storage (áudio) | Signed URLs via `supabase-js` | `anon_key` + Storage policies |
+| Admin / seed / testes | Server-side | `service_role_key` (bypassa RLS) |
+| Dados globais do sistema (futuro: configs admin) | API dedicada (quando necessário) | `service_role_key` ou function |
+
+> Isso simplifica a arquitetura: zero backend custom para CRUD de dados. O Supabase + RLS é o backend.
+
 ## Pré-requisitos
 
-- [ ] Ter uma conta no Supabase (https://supabase.com)
-- [ ] Criar um projeto Supabase manualmente no Dashboard (o agente não faz isso)
-- [ ] Ter as credenciais disponíveis:
-  - `SUPABASE_URL` (ex: https://xxxxx.supabase.co)
-  - `SUPABASE_ANON_KEY`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-- [ ] Configurar as variáveis de ambiente no arquivo `.env` na raiz do projeto
+- [x] Ter uma conta no Supabase (https://supabase.com)
+- [x] Criar um projeto Supabase manualmente no Dashboard
+- [x] Ter as credenciais disponíveis em `.env.local`
+- [ ] Auth providers configurados no Supabase Dashboard (este mini-plan documenta como)
+- [ ] Node.js 20+ e pnpm instalados
 
 ## Escopo
 
@@ -166,15 +193,24 @@ Criar `supabase/setup.sh`:
 
 ```
 # Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOi...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+SUPABASE_PROJECT_ID=qugnyuswbyblychfkdef
+SUPABASE_URL=https://qugnyuswbyblychfkdef.supabase.co
+SUPABASE_ANON_KEY=<ver .env.local>
+SUPABASE_SERVICE_ROLE_KEY=<ver .env.local>
+SUPABASE_PUBLISHABLE_KEY=<ver .env.local>
+SUPABASE_SECRET_KEY=<ver .env.local>
+SUPABASE_DB_PASSWORD=<ver .env.local>
+
+# Next.js public vars
+NEXT_PUBLIC_SUPABASE_URL=https://qugnyuswbyblychfkdef.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<ver .env.local>
 
 # OpenAI (para embeddings)
 OPENAI_API_KEY=sk-...
 
 # Auth redirect URLs (configurar no Supabase Dashboard)
 # Web: https://app.meetily.ai/auth/callback
+# Web dev: http://localhost:3000/auth/callback
 # Desktop: meetily://auth/callback
 ```
 
@@ -188,11 +224,11 @@ Após executar este mini-plan, o usuário precisa configurar manualmente no Supa
 1. **Email Magic Link**: Authentication → Providers → Email → Enable (já vem habilitado)
 2. **Google OAuth**:
    - Google Cloud Console → Criar OAuth 2.0 Client ID
-   - Authorized redirect: `https://<project>.supabase.co/auth/v1/callback`
+   - Authorized redirect: `https://qugnyuswbyblychfkdef.supabase.co/auth/v1/callback`
    - Supabase Dashboard → Authentication → Providers → Google → Preencher Client ID + Secret
 3. **GitHub OAuth**:
    - GitHub Settings → Developer Settings → OAuth Apps → New
-   - Callback URL: `https://<project>.supabase.co/auth/v1/callback`
+   - Callback URL: `https://qugnyuswbyblychfkdef.supabase.co/auth/v1/callback`
    - Supabase Dashboard → Authentication → Providers → GitHub → Preencher Client ID + Secret
 
 ### Redirect URLs

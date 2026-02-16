@@ -98,9 +98,13 @@ O **Meetily** é um app desktop (Tauri 2.6 + Next.js 14) de gravação e transcr
 | `chat_messages` | Conversas do Copilot (4 contextos) | Polimórfico via `context_type` + `context_id` |
 | `meeting_contacts` | Relação N:N meetings ↔ contacts (participantes) | Junction table |
 
-**Segurança**: RLS habilitado em todas as tabelas. Cada usuário só acessa seus próprios dados. Service role key bypassa RLS (Edge Functions).
+**Segurança (RLS)**: RLS habilitado em todas as tabelas. Cada usuário só acessa seus próprios dados. Service role key bypassa RLS (Edge Functions).
+
+**Acesso a dados**: Clientes (Web UI e Tauri) acessam Supabase **diretamente** via `supabase-js` + `anon_key` + RLS. **Sem API intermediária** para dados do usuário. O Supabase + RLS é o backend.
 
 **Sync**: Last-write-wins via `sync_version` (incrementa a cada update). Dedup via `local_meeting_id` + `device_id`.
+
+**Supabase Project**: `meetpix` (Organization: meetpix PRO) · Region: Americas · Credenciais em `.env.local`
 
 ---
 
