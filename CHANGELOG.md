@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [2026-02-16]
+
+### Added — Cloud Sync v1 Planning
+
+#### PRD e Mini-Plans para sincronização na nuvem
+
+Criado planejamento completo para adicionar Cloud Sync ao Meetily via Supabase, permitindo acesso a reuniões de múltiplos dispositivos e via Web UI.
+
+**Documentos criados:**
+- `PRD_CLOUD_SYNC_V1.md` — PRD completo (~1750 linhas) com 16 seções cobrindo arquitetura, schema SQL, sync engine, auth, web UI, copilot, testes E2E, e considerações técnicas
+- `mini-plans/OVERVIEW.md` — Visão geral do projeto (referência rápida para cada sessão)
+- `mini-plans/README.md` — Instruções de execução dos mini-plans
+- `mini-plans/mini-plan-01-supabase-foundation.md` — Schema SQL, RLS, Storage, Edge Functions (32 testes)
+- `mini-plans/mini-plan-02-sync-engine-tauri.md` — Auth desktop (PKCE), sync engine bidirecional, import de meetings (14 testes)
+- `mini-plans/mini-plan-03-web-ui.md` — Next.js 16, auth web, dashboard, meeting detail, workspaces, contacts (26 testes)
+- `mini-plans/mini-plan-04-copilot.md` — Edge Function copilot-chat, 4 contextos, SSE streaming, busca semântica (27 testes)
+- `mini-plans/mini-plan-05-e2e-tests-deploy.md` — Testes cross-suite, CI/CD GitHub Actions, deploy Vercel (19 testes)
+
+**Stack planejada:**
+- Supabase (Auth, PostgreSQL + pgvector, Storage, Edge Functions)
+- Next.js 16.1 (Turbopack) + React 19 + Tailwind 4 + Shadcn/ui
+- Módulo Rust `cloud/` no Tauri (auth, sync, storage)
+- 118 testes E2E cumulativos (Playwright + cargo test + pgTAP)
+
+**Decisões de design:**
+- Login opt-in no desktop (app funciona 100% sem login)
+- Login obrigatório na web
+- Workspaces flexíveis (projeto, cliente, pessoal — usuário decide)
+- Contacts como entidade global cross-workspace
+- Last-write-wins para conflitos de sync
+- Design com referências Apple, Linear, Vercel, Granola (skill `frontend-design`)
+
+### Changed
+- `CLAUDE.md` — Adicionada seção "Cloud Sync v1" com visão geral da arquitetura planejada, stack, estrutura de diretórios, mini-plans e design system
+
 ## [2025-12-16]
 
 ### Changed - Transcription Engine Simplification

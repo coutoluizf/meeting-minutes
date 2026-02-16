@@ -4,17 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Meetily** is a privacy-first AI meeting assistant that captures, transcribes, and summarizes meetings entirely on local infrastructure. The project consists of two main components:
+**Meetily** is a privacy-first AI meeting assistant that captures, transcribes, and summarizes meetings entirely on local infrastructure. The project consists of two main components, with a third (Cloud Sync) in planning:
 
 1. **Frontend**: Tauri-based desktop application (Rust + Next.js + TypeScript)
 2. **Backend**: FastAPI server for meeting storage and LLM-based summarization (Python)
+3. **Cloud Sync (planejado)**: Supabase + Web UI (Next.js 16) — ver seção "Cloud Sync v1" abaixo
 
 ### Key Technology Stack
-- **Desktop App**: Tauri 2.x (Rust) + Next.js 14 + React 18
-- **Audio Processing**: Rust (cpal, whisper-rs, professional audio mixing)
-- **Transcription**: Whisper.cpp (local, GPU-accelerated)
+- **Desktop App**: Tauri 2.6 (Rust) + Next.js 14 + React 18
+- **Audio Processing**: Rust (cpal, professional audio mixing)
+- **Transcription**: Parakeet (NVIDIA NeMo, ONNX Runtime, local, GPU-accelerated)
 - **Backend API**: FastAPI + SQLite (aiosqlite)
 - **LLM Integration**: Ollama (local), Claude, Groq, OpenRouter
+- **Cloud Sync (planejado)**: Supabase (Auth, PostgreSQL, pgvector, Storage, Edge Functions)
+- **Web UI (planejado)**: Next.js 16.1 (Turbopack) + React 19 + Tailwind 4 + Shadcn/ui
 
 ## Essential Development Commands
 
@@ -873,6 +876,70 @@ $env:RUST_LOG="debug"; ./clean_run_windows.bat
   - `fix/*`: Bug fixes
   - `enhance/*`: Feature enhancements
   - Current: `fix/audio-mixing` (working on audio pipeline improvements)
+
+## Cloud Sync v1 (Planejado)
+
+> **Status**: Em planejamento. PRD e mini-plans criados, implementação ainda não iniciada.
+> **PRD Completo**: [`PRD_CLOUD_SYNC_V1.md`](PRD_CLOUD_SYNC_V1.md)
+> **Mini-Plans**: [`mini-plans/`](mini-plans/) — visão geral em [`mini-plans/OVERVIEW.md`](mini-plans/OVERVIEW.md)
+
+### O que é
+
+Sincronização de reuniões na nuvem via Supabase, permitindo acesso de múltiplos dispositivos (laptop + desktop) e via Web UI. Inclui Copilot cloud com busca semântica (pgvector).
+
+### Princípio
+
+- **Desktop**: Login é opt-in. App funciona 100% sem login (modo local, como hoje).
+- **Web**: Login obrigatório. Acessa meetings sincronizadas do desktop.
+
+### Stack Cloud
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Auth | Supabase Auth (Magic Link, Google, GitHub) |
+| Database | Supabase PostgreSQL + pgvector + pgvectorscale (DiskANN) |
+| Storage | Supabase Storage (áudio, bucket privado) |
+| Edge Functions | Supabase (Deno) — `generate-embedding`, `copilot-chat` |
+| Web UI | Next.js 16.1 (Turbopack) + React 19 + Tailwind 4 + Shadcn/ui |
+| Embeddings | OpenAI text-embedding-3-small (1536d) |
+| LLM Copilot | Claude (Anthropic API) com SSE streaming |
+| Deploy | Vercel (Web UI) |
+
+### Estrutura planejada
+
+```
+# Novo módulo Rust (Tauri desktop)
+frontend/src-tauri/src/cloud/
+├── auth.rs, client.rs, sync_engine.rs, sync_queue.rs, storage.rs, commands.rs
+
+# Novo projeto Web UI
+web/
+├── src/app/          # Next.js 16 App Router (auth, dashboard, meetings, copilot)
+├── src/components/   # Shadcn/ui + custom components
+├── src/lib/          # Supabase clients, hooks
+└── e2e/              # Playwright E2E tests
+
+# Novo diretório Supabase
+supabase/
+├── migrations/       # 14 SQL files (schema, RLS, indexes, functions)
+├── functions/        # Edge Functions (embedding, copilot-chat)
+└── tests/            # Schema validation, RLS security tests
+```
+
+### Mini-Plans de execução
+
+| # | Escopo | Testes |
+|---|--------|--------|
+| 01 | Supabase: schema, RLS, storage, edge functions | 32 |
+| 02 | Tauri: auth desktop (PKCE), sync engine, import | 14 |
+| 03 | Web UI: auth web, dashboard, meeting detail, workspaces | 26 |
+| 04 | Copilot: edge function, 4 contextos, SSE, chat UI | 27 |
+| 05 | E2E cross-suite, CI/CD GitHub Actions, deploy Vercel | 19 |
+| **Total** | | **118** |
+
+### Design System (Web UI)
+
+Usar skill `frontend-design` para cada componente. Referências: Apple (spacing), Linear (sidebar, ⌘K), Vercel (Geist font, dashboard), Granola (split notepad, AI content). Dark mode default. Geist Sans/Mono.
 
 ## Key Files Reference
 
